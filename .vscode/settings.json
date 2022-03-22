@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "ed25519.h": "c",
+        "xutility": "cpp"
+    }
+}
