@@ -1,3 +1,7 @@
+// Author: Gustavo Diaz Galeas (Incapamentum)
+//
+// Last revision: March 29th, 2022
+
 #ifndef BLOCK_H
 #define BLOCK_H
 
