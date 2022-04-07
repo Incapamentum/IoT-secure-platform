@@ -5,10 +5,14 @@
 #ifndef DEFINITIONS_H
 #define DEFINITIONS_H
 
-#define MICROSEC 1000
-
 #define BAUD_RATE 9600
-#define POLL_RATE 10 * MICROSEC
+
+#define EST -5
+
+#define SEC 1000
+#define HALF_SEC 5000
+
+#define POLL_RATE 10 * SEC
 
 // NOTE: this may not be needed in the end
 // Week Days
