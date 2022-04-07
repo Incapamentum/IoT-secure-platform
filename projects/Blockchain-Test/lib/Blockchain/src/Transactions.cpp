@@ -32,11 +32,7 @@ void Transaction::setTimestamp(uint8_t ts[SHA1_SIZE])
     std::copy(ts, ts + SHA1_SIZE, timestamp_);
 }
 
-// How to go on about hashing this?
-// More importantly, what goes in here for it to be hashed?
-// Timestamp and chip ID
-//  chipID is a 32-bit int (i.e. 4 bytes)
-// Hash size is 32 bytes (256-bits)
+// Hashes the timestamp_, serverKey_, and data_ of the block
 void Transaction::hashTransaction(unsigned int chipId)
 {
     SHA512 h;

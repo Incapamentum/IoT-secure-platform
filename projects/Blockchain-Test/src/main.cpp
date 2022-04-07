@@ -23,7 +23,7 @@ void setup()
 {
     Serial.begin(BAUD_RATE);
 
-    Serial.println("\t\t\tSizes of specific structs/objects");
+    Serial.println("\tSizes of specific structs/objects");
     Serial.println("================================================");
     Serial.printf("\tSize of 'Data' struct: %d (bytes)\n", sizeof(Data));
     Serial.printf("\tSize of 'Transactions' class: %d (bytes)\n", sizeof(Transaction));
