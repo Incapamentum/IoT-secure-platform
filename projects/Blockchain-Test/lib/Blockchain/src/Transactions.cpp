@@ -27,9 +27,9 @@ void Transaction::setData(uint8_t temp, uint8_t hum)
 // Sets the timestamp_ variable to the value of ts, which is the result
 // of hashing the timestamp at the time of generation with the ID of
 // the chip
-void Transaction::setTimestamp(uint8_t ts[SHA1_SIZE])
+void Transaction::setTimestamp(uint8_t ts[SHA256_SIZE])
 {
-    std::copy(ts, ts + SHA1_SIZE, timestamp_);
+    std::copy(ts, ts + SHA256_SIZE, timestamp_);
 }
 
 // Hashes the timestamp_, serverKey_, and data_ of the block
@@ -40,8 +40,8 @@ void Transaction::hashTransaction(unsigned int chipId)
     unsigned char d_buffer[transaction_size];
 
     // Packing data to the buffer
-    memcpy(d_buffer + ptr, timestamp_, SHA1_SIZE);
-    ptr += SHA1_SIZE;
+    memcpy(d_buffer + ptr, timestamp_, SHA256_SIZE);
+    ptr += SHA256_SIZE;
     memcpy(d_buffer + ptr, serverKey_, KEY_LENGTH);
     ptr += KEY_LENGTH;
     memcpy(d_buffer + ptr, &data_, DATA_LENGTH);
