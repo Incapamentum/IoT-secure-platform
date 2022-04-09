@@ -9,10 +9,8 @@
 #include <Crypto.h>
 #include <stdint.h>
 
-#define BLOCK_SIZE 64
 #define DATA_LENGTH 2
 #define KEY_LENGTH 32
-// #define SHA1_SIZE 20
 #define SHA256_SIZE 32
 #define SHA512_SIZE 64
 #define SIGN_LENGTH 64
@@ -26,12 +24,16 @@ typedef struct
 
 // A data transaction that is digitally signed by the device
 // that generated it
+//
+// A lot of this might be ultimately changed depending on size reqs
+// Maybe chip ID may be included in this?
+// This may definitely have to be overhauled
 class Transaction
 {
     private:
         Data data_;
         uint8_t transactionHash_[SHA512_SIZE]; // SHA512 hash between timestamp, server key, and data
-        uint8_t timestamp_[SHA256_SIZE]; // SHA1 hash of chip ID and a timestamp
+        uint8_t timestamp_[SHA256_SIZE]; // SHA256 hash of chip ID and a timestamp
         uint8_t serverKey_[KEY_LENGTH];
         uint8_t signature_[SIGN_LENGTH]; // Signature of the transactionHash_
 

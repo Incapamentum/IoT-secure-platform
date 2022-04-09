@@ -9,38 +9,20 @@
 
 #define EST -5
 
+//  ===============================
+//         TIME MANAGEMENT
+// ===============================
 #define SEC 1000
-#define HALF_SEC 5000
-
+#define HALF_SEC 500
 #define POLL_RATE 10 * SEC
+#define T_DELAY HALF_SEC * 6
+// ===============================
 
-// NOTE: this may not be needed in the end
-// Week Days
-const String weekDays[7] = {
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday"
-};
-
-// NOTE: this may not be needed in the end
-// Months
-const String months[12] = {
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December"
-};
+// ===============================
+//         DHT SENSOR ERROR
+// ===============================
+#define DHT_FAILURE 0
+#define DHT_SUCCESS 1
+// ===============================
 
 #endif
