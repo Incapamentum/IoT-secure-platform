@@ -1,14 +1,6 @@
 // Author: Gustavo Diaz Galeas (Incapamentum)
 //
-// Last revision: April 7th, 2022
-
-// =========================
-//           NOTES
-// =========================
-//
-//      SHA256::finalize() takes in two params:
-//          void *hash - buffer to return the hash value in
-//          size_t len - length of the hash buffer (normally hashSize())
+// Last revision: April 10th, 2022
 
 #include <Arduino.h>
 #include <Crypto.h>
@@ -30,7 +22,7 @@
 //  ==============================
 //              MAIN
 // ===============================
-char *c_ptr;
+char *ts_buffer;
 
 int i, n;
 
@@ -66,33 +58,18 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org");
 uint8_t secretKey[KEY_LENGTH];
 uint8_t publicKey[KEY_LENGTH];
 
-uint8_t serverKey[KEY_LENGTH];
-
 uint8_t timestamp[SHA256_SIZE];
 // ===============================
 
+// Generates public-private key pair for device
 void genKeys(void)
 {
-    int i, temp;
-
-    // Generating public-private key pair for device
     Ed25519::generatePrivateKey(secretKey);
     Ed25519::derivePublicKey(publicKey, secretKey);
-
-    // Generating the server public ID
-    srand(time(0));
-
-    for (i = 0; i < KEY_LENGTH; i++)
-    {
-        temp = rand() % 255;
-        serverKey[i] = temp & 0xFF;
-    }
-
 }
 
 void getTime(void)
 {
-    // Serial.println("Peng");
     time_t epochTime;
     int currentYear;
     int currentMonth;
@@ -104,8 +81,6 @@ void getTime(void)
     timeClient.update();
 
     epochTime = timeClient.getEpochTime();
-    // Serial.print("Epoch Time: ");
-    // Serial.println(epochTime);
 
     ptm = gmtime ((time_t *)&epochTime);
 
@@ -171,7 +146,7 @@ void wifiInit(void)
         Serial.print(".");
     }
 
-    Serial.println();
+    Serial.printf("\nConnected\n");
 }
 
 void setup() 
@@ -188,38 +163,37 @@ void setup()
     genKeys();
     wifiInit();
     ntpInit();
-
-    // Checking key values
-    // keyCheck(secretKey, "Secret Key");
-    // keyCheck(publicKey, "Public Key");
-    // keyCheck(serverKey, "Server Key");
 }
 
+// Might be useful to have a FSM included here
 void loop() 
 {
     SHA256 sha256;
-    Transaction *t = new Transaction(serverKey);
+    Transaction *t = new Transaction(publicKey);
 
     // Sensor success
     if (sampleSensor() == DHT_SUCCESS)
     {
         t->setData(temperature, humidity);
+
         getTime();
 
         msg = String(chipId) + "|" + ts;
         n = msg.length();
 
-        c_ptr = (char *)calloc(n, sizeof(char));
+        ts_buffer = (char *)calloc(n, sizeof(char));
+        strcpy(ts_buffer, msg.c_str());
 
-        strcpy(c_ptr, msg.c_str());
-
-        sha256.update(c_ptr, n);
+        sha256.update(ts_buffer, n);
         sha256.finalize(timestamp, SHA256_SIZE);
 
-        for (i = 0; i < SHA256_SIZE; i++)
-            i != SHA256_SIZE - 1 ? Serial.printf("%08X ", timestamp[i]) : Serial.printf(" %08X\n", timestamp[i]);
+        t->hashTransaction(timestamp);
+        t->sign(secretKey);
 
-        free(c_ptr);
+        if (t->verify())
+            Serial.println("Valid transaction");
+
+        free(ts_buffer);
     }
 
     delay(POLL_RATE);

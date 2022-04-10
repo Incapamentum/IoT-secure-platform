@@ -1,6 +1,6 @@
 // Author: Gustavo Diaz Galeas (Incapamentum)
 // 
-// Last revision: April 7th, 2022
+// Last revision: April 10th, 2022
 
 #ifndef TRANSACTIONS_H
 #define TRANSACTIONS_H
@@ -24,17 +24,13 @@ typedef struct
 
 // A data transaction that is digitally signed by the device
 // that generated it
-//
-// A lot of this might be ultimately changed depending on size reqs
-// Maybe chip ID may be included in this?
-// This may definitely have to be overhauled
 class Transaction
 {
     private:
         Data data_;
+
         uint8_t transactionHash_[SHA512_SIZE]; // SHA512 hash between timestamp, server key, and data
-        uint8_t timestamp_[SHA256_SIZE]; // SHA256 hash of chip ID and a timestamp
-        uint8_t serverKey_[KEY_LENGTH];
+        uint8_t ownerKey_[KEY_LENGTH];
         uint8_t signature_[SIGN_LENGTH]; // Signature of the transactionHash_
 
     public:
@@ -42,11 +38,12 @@ class Transaction
 
         static const size_t transaction_size = 66;
 
+        void printSignature(void);
         void setData(uint8_t temp, uint8_t hum);
-        void setTimestamp(uint8_t ts[SHA256_SIZE]);
-        void hashTransaction(unsigned int chipId);
-        int sign(uint8_t deviceKey[KEY_LENGTH]);
-};
 
+        void hashTransaction(uint8_t ts[SHA256_SIZE]);
+        void sign(uint8_t deviceKey[KEY_LENGTH]);
+        int verify(void);
+};
 
 #endif
