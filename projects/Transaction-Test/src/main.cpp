@@ -1,6 +1,6 @@
 // Author: Gustavo Diaz Galeas (Incapamentum)
 //
-// Last revision: April 10th, 2022
+// Last revision: April 20th, 2022
 
 #include <Arduino.h>
 #include <Crypto.h>
@@ -20,20 +20,24 @@
 #define DHT11_PIN 2
 
 //  ==============================
-//              MAIN
+//            Iteration
 // ===============================
-char *ts_buffer;
-
 int i, n;
-
-String ts;
-String msg;
 // ===============================
 
 //  ==============================
 //             ESP8266
 // ===============================
-unsigned int chipId;
+uint8_t chipId[sizeof(int)];
+// ===============================
+
+//  ==============================
+//           Timestamps
+// ===============================
+char ts[23];
+char *ts_buffer;
+
+struct tm *ptm;
 // ===============================
 
 //  ==============================
@@ -47,7 +51,6 @@ int err;
 //  ==============================
 //            Wifi/NTP
 // ===============================
-struct tm *ptm;
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org");
 // ===============================
@@ -55,17 +58,76 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org");
 //  ==============================
 //            Crypto
 // ===============================
+char chipStamp[STAMP_LENGTH];
+
 uint8_t secretKey[KEY_LENGTH];
 uint8_t publicKey[KEY_LENGTH];
-
-uint8_t timestamp[SHA256_SIZE];
 // ===============================
+
+// Given a starting point, copies the contents of src
+// to dest
+void copyDigits(char *dest, const char *src, int *start)
+{
+    int len = strlen(src);
+    int p = 0;
+
+    while (p < len)
+        dest[(*start)++] = src[p++];
+}
+
+// Extracts the digits making up the number 'val', returning them
+// as characters
+char *extractDigits(int val, int num_digits)
+{
+
+    char *d_buffer;
+    int digit;
+    int x = num_digits - 1;
+
+    d_buffer = (char *)calloc(num_digits + 1, sizeof(char));
+
+    if (d_buffer == NULL)
+        return NULL;
+
+    d_buffer[num_digits] = '\0';
+
+    while (val != 0)
+    {
+        digit = val % 10;
+        val /= 10;
+        d_buffer[x--] = digit + '0';
+    }
+
+    // Pads the rest with 0s if the value is not large enough to fill
+    // in the remaining digits
+    while (x >= 0)
+    {
+        d_buffer[x--] = '0';
+    }
+
+    return d_buffer;    
+}
 
 // Generates public-private key pair for device
 void genKeys(void)
 {
     Ed25519::generatePrivateKey(secretKey);
     Ed25519::derivePublicKey(publicKey, secretKey);
+}
+
+void getChipId(void)
+{
+    int i;
+    unsigned int id;
+
+    id = ESP.getChipId();
+
+    for (i = sizeof(int) - 1; i >= 0; i--)
+    {
+        chipId[i] = id & 0xFF;
+        id = id >> 8;
+    }
+
 }
 
 void getTime(void)
@@ -78,10 +140,11 @@ void getTime(void)
     int currentMinute;
     int currentSecond;
 
+    // Clearing string of any data
+    memset(ts, '\0', sizeof(ts));
+
     timeClient.update();
-
     epochTime = timeClient.getEpochTime();
-
     ptm = gmtime ((time_t *)&epochTime);
 
     currentYear = ptm->tm_year + 1900;
@@ -91,22 +154,9 @@ void getTime(void)
     currentMinute = timeClient.getMinutes();
     currentSecond = timeClient.getSeconds();
 
-    ts = String(currentYear) + "-";
-    ts += String(currentMonth) + "-";
-    ts += String(currentDay) + "T";
-    ts += String(currentHour) + ":";
-    ts += String(currentMinute) + ":";
-    ts += String(currentSecond) + "+";
-    ts += String(EST);
-}
-
-void keyCheck(uint8_t *ptr, String name)
-{
-    int i;
-
-    Serial.print(name + " ");
-    for (i = 0; i < KEY_LENGTH; i++)
-        i != KEY_LENGTH - 1 ? Serial.printf("%08X ", ptr[i]) : Serial.printf(" %08X\n", ptr[i]);
+    // Writing timestamp
+    snprintf(ts, sizeof(ts), "%d-%02d-%02dT%02d:%02d:%02d+%d",
+        currentYear, currentMonth, currentDay, currentHour, currentMinute, currentSecond, EST);
 }
 
 void ntpInit(void)
@@ -159,7 +209,7 @@ void setup()
     Serial.printf("\tSize of 'Transactions' class: %d (bytes)\n\n", sizeof(Transaction));
 
     // Initializations
-    chipId = ESP.getChipId();
+    getChipId();
     genKeys();
     wifiInit();
     ntpInit();
@@ -168,32 +218,31 @@ void setup()
 // Might be useful to have a FSM included here
 void loop() 
 {
+    Transaction *t;
     SHA256 sha256;
-    Transaction *t = new Transaction(publicKey);
 
     // Sensor success
+    // Work on timestamp stuff
     if (sampleSensor() == DHT_SUCCESS)
     {
-        t->setData(temperature, humidity);
-
         getTime();
 
-        msg = String(chipId) + "|" + ts;
-        n = msg.length();
+        // Clearing string of any data
+        memset(chipStamp, '\0', sizeof(chipStamp));
 
-        ts_buffer = (char *)calloc(n, sizeof(char));
-        strcpy(ts_buffer, msg.c_str());
+        // Concatinating chip ID with timestamp
+        snprintf(chipStamp, sizeof(chipStamp), "%02X%02X%02X%02X|%s",
+            chipId[0], chipId[1], chipId[2], chipId[3], ts);
 
-        sha256.update(ts_buffer, n);
-        sha256.finalize(timestamp, SHA256_SIZE);
+        t = new Transaction(publicKey, chipStamp);
 
-        t->hashTransaction(timestamp);
+        t->setData(temperature, humidity);
         t->sign(secretKey);
 
         if (t->verify())
             Serial.println("Valid transaction");
-
-        free(ts_buffer);
+        else
+            Serial.println("Invalid transaction");
     }
 
     delay(POLL_RATE);
