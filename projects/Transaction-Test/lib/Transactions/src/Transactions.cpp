@@ -1,6 +1,6 @@
 // Author: Gustavo Diaz Galeas (Incapamentum)
 //
-// Last revision: April 10th, 2022
+// Last revision: April 20th, 2022
 
 #include <algorithm>
 #include <Ed25519.h>
@@ -12,9 +12,29 @@
 
 // On invocation, sets the ownerKey_ to the public key of the
 // device that created the Transaction
-Transaction::Transaction(uint8_t key[KEY_LENGTH])
+Transaction::Transaction(uint8_t key[KEY_LENGTH], const char stamp[STAMP_LENGTH])
 {
     std::copy(key, key + KEY_LENGTH, ownerKey_);
+    std::copy(stamp, stamp + STAMP_LENGTH, stamp_);
+}
+
+uint8_t *Transaction::genHash(void)
+{
+    SHA256 h256;
+    uint8_t *t_hash;
+
+    t_hash = (uint8_t *)calloc(SHA256_SIZE, sizeof(uint8_t));
+
+    h256.update(stamp_, STAMP_LENGTH);
+    h256.finalize(t_hash, SHA256_SIZE);
+
+    return t_hash;
+}
+
+// Prints the timestamp of when the Transaction was created
+void Transaction::printStamp(void)
+{
+    Serial.println(stamp_);
 }
 
 // Prints the signature value of the Transaction. Used for debugging purposes
@@ -24,7 +44,6 @@ void Transaction::printSignature(void)
 
     for (i = 0; i < SIGN_LENGTH; i++)
         i != SIGN_LENGTH - 1 ? Serial.printf("%08X ", signature_[i]) : Serial.printf(" %08X\n", signature_[i]);
-
 }
 
 // Sets temperature and humidity data
@@ -34,39 +53,28 @@ void Transaction::setData(uint8_t temp, uint8_t hum)
     data_.humidity = hum;
 }
 
-// Hashes the timestamp_, ownerKey_, and data_ of the block
-void Transaction::hashTransaction(uint8_t ts[SHA256_SIZE])
-{
-    SHA512 h;
-    unsigned int ptr = 0;
-    unsigned char d_buffer[transaction_size];
-
-    // Packing data to the buffer
-    memcpy(d_buffer + ptr, ts, SHA256_SIZE);
-    ptr += SHA256_SIZE;
-    memcpy(d_buffer + ptr, ownerKey_, KEY_LENGTH);
-    ptr += KEY_LENGTH;
-    memcpy(d_buffer + ptr, &data_, DATA_LENGTH);
-
-    // Setting data to be hashed
-    h.update(d_buffer, transaction_size);
-
-    // Hashing
-    h.finalize(transactionHash_, SHA512_SIZE);
-}
-
-// Signs the hash of the Transaction with the device private key
+// Hashes the contents of the Transaction before signing
 void Transaction::sign(uint8_t deviceKey[KEY_LENGTH])
 {
-    Ed25519::sign(signature_, deviceKey, ownerKey_, transactionHash_, SHA512_SIZE);
+    SHA256 h256;
+    uint8_t *t_hash;
+
+    t_hash = genHash();
+    
+    Ed25519::sign(signature_, deviceKey, ownerKey_, t_hash, SHA256_SIZE);
+
+    free(t_hash);
 }
 
-// Verifies the hash of the Transaction with the device public key
+// // Verifies the hash of the Transaction with the device public key
 int Transaction::verify(void)
 {
     bool verified;
+    uint8_t *t_hash;
 
-    verified = Ed25519::verify(signature_, ownerKey_, transactionHash_, SHA512_SIZE);
+    t_hash = genHash();
+
+    verified = Ed25519::verify(signature_, ownerKey_, t_hash, SHA256_SIZE);
 
     if (verified)
         return 1;
