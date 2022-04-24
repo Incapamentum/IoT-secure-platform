@@ -22,7 +22,9 @@ WiFiClientSecure wiFiClient;
 void msgReceived(char* topic, byte* payload, unsigned int len);
 PubSubClient pubSubClient(awsEndpoint, 8883, msgReceived, wiFiClient); 
 
-void setCurrentTime()
+// Configures the ESP8266 time with the current time via
+// NTP access
+void setCurrentTime(void)
 {
     configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
 
@@ -40,6 +42,8 @@ void setCurrentTime()
     Serial.print("Current time: "); Serial.print(asctime(&timeinfo));
 }
 
+// Checks whether the client is connected to the service or not,
+// and to maintain a stable connection
 void pubSubCheckConnect(void)
 {
     bool val;
@@ -60,6 +64,8 @@ void pubSubCheckConnect(void)
     pubSubClient.loop();
 }
 
+// Handles the receiving of messages that is published from AWS IoT
+// Basically a subscriber
 void msgReceived(char* topic, byte* payload, unsigned int length)
 {
     Serial.print("Message received on "); Serial.print(topic); Serial.print(": ");
