@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <Crypto.h>
 #include <Ed25519.h>
 #include <ESP8266WiFi.h>
@@ -248,10 +249,10 @@ void loop()
 {
     Transaction *t;
     SHA256 sha256;
-    uint8_t *test;
+    StaticJsonDocument<BUDGET> doc;
+    char *byteString;
 
     // Sensor success
-    // Work on timestamp stuff
     if (sampleSensor() == DHT_SUCCESS)
     {
         getTime();
@@ -268,13 +269,18 @@ void loop()
         t->setData(temperature, humidity);
         t->sign(secretKey);
 
+        // The below code block may no longer be needed
         if (t->verify())
         {
             Serial.println("Valid transaction");
-            test = t->toByteArray();
 
-            for (i = 0; i < 130; i++)
-                i < 130 - 1 ? Serial.printf("%02X ", test[i]) : Serial.printf("%02X\n", test[i]);
+            doc["hum"] = t->getHumidity();
+            doc["temp"] = t->getTemperature();
+            doc["stamp"] = t->getStamp();
+            doc["key"] = t->getOwnerKeyHex();
+            doc["sign"] = t->getSignatureHex();
+
+            serializeJson(doc, Serial);
         }
         else
             Serial.println("Invalid transaction");

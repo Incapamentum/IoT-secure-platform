@@ -20,8 +20,8 @@
 // Sensor data is collected and packed here
 typedef struct
 {
-    uint8_t temperature;
     uint8_t humidity;
+    uint8_t temperature;
 } Data;
 
 // A data transaction that is digitally signed by the device
@@ -39,9 +39,15 @@ class Transaction
     public:
         Transaction(uint8_t key[KEY_LENGTH], const char stamp[STAMP_LENGTH]);
 
+        char *encodeOwnerKey(void);
+        char *encodeSignature(void);
+        uint8_t getHumidity(void);
+        uint8_t getTemperature(void);
+        const char *getStamp(void);
+        char *getOwnerKeyHex(void);
+        char *getSignatureHex(void);
         void printStamp(void);
         void printSignature(void);
-        uint8_t *toByteArray(void);
         void setData(uint8_t temp, uint8_t hum);
 
         void sign(uint8_t deviceKey[KEY_LENGTH]);

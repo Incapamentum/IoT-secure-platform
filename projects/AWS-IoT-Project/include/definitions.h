@@ -6,7 +6,7 @@
 #define DEFINITIONS_H
 
 #define BAUD_RATE 9600
-#define BUDGET 192
+#define BUDGET 384
 
 #define EST -5
 

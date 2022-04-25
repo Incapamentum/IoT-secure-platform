@@ -3,12 +3,39 @@
 // Last revision: April 20th, 2022
 
 #include <algorithm>
+#include <Base64.h>
 #include <Ed25519.h>
 #include <SHA256.h>
 #include <SHA512.h>
-#include <string.h>
 
 #include "Transactions.h"
+
+// Converts from bytes/uint8s to char array of double the size
+void byteToHex(uint8_t *src, char *dst, int length)
+{
+    int i, j;
+    uint8_t b, upper, lower;
+
+    for (i = 0, j = 0; i < length; i++)
+    {
+        b = src[i];
+        upper = b >> 4;
+        lower = b & 0xF;
+
+        if (upper < 10)
+            upper += '0';
+        else
+            upper += 55;
+
+        if (lower < 10)
+            lower += '0';
+        else
+            lower += 55;
+
+        dst[j++] = upper;
+        dst[j++] = lower;
+    }
+}
 
 // On invocation, sets the ownerKey_ to the public key of the
 // device that created the Transaction
@@ -31,6 +58,50 @@ uint8_t *Transaction::genHash(void)
     return t_hash;
 }
 
+// Returns the humidity of the DHT sensor
+uint8_t Transaction::getHumidity(void)
+{
+    return data_.humidity;
+}
+
+// Returns the temperature of the DHT sensor
+uint8_t Transaction::getTemperature(void)
+{
+    return data_.temperature;
+}
+
+// Returns the base address of the stamp
+const char *Transaction::getStamp(void)
+{
+    return stamp_;
+}
+
+// Returns the owner key of the Transaction as a
+// hexadecimal value
+char *Transaction::getOwnerKeyHex(void)
+{
+    static char hexKey[(KEY_LENGTH * 2) + 1];
+
+    // Clearing garbage data
+    memset(hexKey, '\0', (KEY_LENGTH * 2) + 1);
+
+    byteToHex(ownerKey_, hexKey, KEY_LENGTH);
+
+    return hexKey;
+}
+
+char *Transaction::getSignatureHex(void)
+{
+    static char hexSign[(SIGN_LENGTH * 2) + 1];
+
+    // Clearing garbage data
+    memset(hexSign, '\0', (SIGN_LENGTH * 2) + 1);
+
+    byteToHex(signature_, hexSign, SIGN_LENGTH);
+
+    return hexSign;
+}
+
 // Prints the timestamp of when the Transaction was created
 void Transaction::printStamp(void)
 {
@@ -44,28 +115,6 @@ void Transaction::printSignature(void)
 
     for (i = 0; i < SIGN_LENGTH; i++)
         i != SIGN_LENGTH - 1 ? Serial.printf("%08X ", signature_[i]) : Serial.printf(" %08X\n", signature_[i]);
-}
-
-// Returns the transaction as a byte string
-uint8_t *Transaction::toByteArray(void)
-{
-    int i, j, k = 0;
-    size_t total_size;
-    static uint8_t buffer[sizeof(Data) + STAMP_LENGTH + KEY_LENGTH + SIGN_LENGTH];
-
-    // Clearing of any garbage data
-    memset(buffer, 0, total_size);
-
-    // Constructing the byte array
-    memcpy(buffer, &data_, sizeof(data_));
-    total_size = sizeof(data_);
-    memcpy(buffer + total_size, stamp_, sizeof(stamp_));
-    total_size += sizeof(stamp_);
-    memcpy(buffer + total_size, ownerKey_, sizeof(ownerKey_));
-    total_size += sizeof(ownerKey_);
-    memcpy(buffer + total_size, signature_, sizeof(signature_));
-
-    return buffer;
 }
 
 // Sets temperature and humidity data
