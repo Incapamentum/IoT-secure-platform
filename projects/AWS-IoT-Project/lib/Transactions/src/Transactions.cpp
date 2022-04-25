@@ -51,51 +51,19 @@ uint8_t *Transaction::toByteArray(void)
 {
     int i, j, k = 0;
     size_t total_size;
-    uint8_t *buffer;
-
-    total_size = sizeof(Data) + STAMP_LENGTH + KEY_LENGTH + SIGN_LENGTH;
-
-    buffer = (uint8_t *)calloc(total_size, sizeof(uint8_t));
+    static uint8_t buffer[sizeof(Data) + STAMP_LENGTH + KEY_LENGTH + SIGN_LENGTH];
 
     // Clearing of any garbage data
     memset(buffer, 0, total_size);
 
-    for (i = 0; i < TOTAL_ITEMS; i++)
-    {
-        // Handles Data
-        if (i == 0)
-        {
-            buffer[k++] = data_.temperature;
-            buffer[k++] = data_.humidity;
-        }
-
-        // Handles the stamp
-        else if (i == 1)
-        {
-            for (j = 0; j < STAMP_LENGTH; j++)
-            {
-                buffer[k++] = stamp_[j];                
-            }
-        }
-
-        // Handles the key
-        else if (i == 2)
-        {
-            for (j = 0; j < KEY_LENGTH; j++)
-            {
-                buffer[k++] = ownerKey_[j];
-            }
-        }
-
-        // Handles the signature
-        else
-        {
-            for (j = 0; j < SIGN_LENGTH; j++)
-            {
-                buffer[k++] = signature_[j];
-            }
-        }
-    }
+    // Constructing the byte array
+    memcpy(buffer, &data_, sizeof(data_));
+    total_size = sizeof(data_);
+    memcpy(buffer + total_size, stamp_, sizeof(stamp_));
+    total_size += sizeof(stamp_);
+    memcpy(buffer + total_size, ownerKey_, sizeof(ownerKey_));
+    total_size += sizeof(ownerKey_);
+    memcpy(buffer + total_size, signature_, sizeof(signature_));
 
     return buffer;
 }

@@ -161,9 +161,9 @@ void pubSubCheckConnect(void)
 void msgReceived(char* topic, byte* payload, unsigned int length)
 {
     Serial.print("Message received on "); Serial.print(topic); Serial.print(": ");
-    for (int i = 0; i < length; i++)
+    for (unsigned int l = 0; l < length; l++)
     {
-    Serial.print((char)payload[i]);
+        Serial.print((char)payload[l]);
     }
     Serial.println();
 }
@@ -275,8 +275,6 @@ void loop()
 
             for (i = 0; i < 130; i++)
                 i < 130 - 1 ? Serial.printf("%02X ", test[i]) : Serial.printf("%02X\n", test[i]);
-
-            free(test);
         }
         else
             Serial.println("Invalid transaction");
