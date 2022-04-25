@@ -19,8 +19,6 @@
 //  ==============================
 //            Crypto
 // ===============================
-char chipStamp[STAMP_LENGTH];
-
 uint8_t secretKey[KEY_LENGTH];
 uint8_t publicKey[KEY_LENGTH];
 // ===============================
@@ -40,6 +38,7 @@ int i, n;
 //  ==============================
 //          PubSub Client
 // ===============================
+char payload[MAX_SIZE];
 WiFiClientSecure wiFiClient;
 void msgReceived(char* topic, byte* payload, unsigned int len);
 PubSubClient pubSubClient(awsEndpoint, 8883, msgReceived, wiFiClient); 
@@ -238,6 +237,9 @@ void setup()
     wifiInit();
     ntpInit();
 
+    // Setting max message size for PubSub
+    pubSubClient.setBufferSize(MAX_SIZE);
+
     // Get current time, otherwise certs will be flagged as expired
     setCurrentTime();
 
@@ -251,39 +253,46 @@ void loop()
     SHA256 sha256;
     StaticJsonDocument<BUDGET> doc;
     char *byteString;
+    size_t size;
+
+    // Check for any incoming messages
+    pubSubCheckConnect();
 
     // Sensor success
     if (sampleSensor() == DHT_SUCCESS)
     {
         getTime();
 
-        // Clearing string of any data
-        memset(chipStamp, '\0', sizeof(chipStamp));
+        // Clearing contents
+        memset(payload, '\0', MAX_SIZE);
 
-        // Concatinating chip ID with timestamp
-        snprintf(chipStamp, sizeof(chipStamp), "%02X%02X%02X%02X|%s",
-            chipId[0], chipId[1], chipId[2], chipId[3], ts);
-
-        t = new Transaction(publicKey, chipStamp);
-
+        t = new Transaction(publicKey, ts);
         t->setData(temperature, humidity);
         t->sign(secretKey);
 
-        // The below code block may no longer be needed
         if (t->verify())
         {
             Serial.println("Valid transaction");
 
-            doc["hum"] = t->getHumidity();
-            doc["temp"] = t->getTemperature();
+            doc["data"] = t->getDataHex();
             doc["stamp"] = t->getStamp();
             doc["key"] = t->getOwnerKeyHex();
             doc["sign"] = t->getSignatureHex();
 
-            serializeJson(doc, Serial);
+            size = serializeJson(doc, payload);
+
+            if (millis() - lastPublish > 10000)
+            {
+                pubSubClient.publish("outTopic", payload, size);
+                Serial.println("Data was published!");
+                lastPublish = millis();
+            }
+
         }
         else
+        {
             Serial.println("Invalid transaction");
+        }
     }
 
     delay(POLL_RATE);

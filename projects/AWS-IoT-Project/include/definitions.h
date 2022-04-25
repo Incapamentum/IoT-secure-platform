@@ -7,6 +7,7 @@
 
 #define BAUD_RATE 9600
 #define BUDGET 384
+#define MAX_SIZE 512
 
 #define EST -5
 
