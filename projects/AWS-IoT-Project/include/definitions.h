@@ -1,6 +1,6 @@
 // Author: Gustavo Diaz Galeas (Incapamentum)
 //
-// Last revision: April 24th, 2022
+// Last revision: April 25th, 2022
 
 #ifndef DEFINITIONS_H
 #define DEFINITIONS_H
@@ -16,7 +16,7 @@
 // ===============================
 #define SEC 1000
 #define HALF_SEC 500
-#define POLL_RATE 10 * SEC
+#define POLL_RATE 600 * SEC
 #define T_DELAY HALF_SEC * 6
 // ===============================
 

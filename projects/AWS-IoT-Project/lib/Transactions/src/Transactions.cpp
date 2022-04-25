@@ -1,6 +1,6 @@
 // Author: Gustavo Diaz Galeas (Incapamentum)
 //
-// Last revision: April 20th, 2022
+// Last revision: April 25th, 2022
 
 #include <algorithm>
 #include <Base64.h>
