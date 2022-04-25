@@ -11,9 +11,7 @@
 
 #define DATA_LENGTH 2
 #define KEY_LENGTH 32
-#define MAX_SIZE 256
-#define TOTAL_ITEMS 4
-#define STAMP_LENGTH 32
+#define STAMP_LENGTH 23
 #define SHA256_SIZE 32
 #define SIGN_LENGTH 64
 
@@ -37,16 +35,12 @@ class Transaction
         uint8_t *genHash(void);
 
     public:
-        Transaction(uint8_t key[KEY_LENGTH], const char stamp[STAMP_LENGTH]);
+        Transaction(uint8_t key[KEY_LENGTH], const char timestamp[STAMP_LENGTH]);
 
-        char *encodeOwnerKey(void);
-        char *encodeSignature(void);
-        uint8_t getHumidity(void);
-        uint8_t getTemperature(void);
+        char *getDataHex(void);
         const char *getStamp(void);
         char *getOwnerKeyHex(void);
         char *getSignatureHex(void);
-        void printStamp(void);
         void printSignature(void);
         void setData(uint8_t temp, uint8_t hum);
 

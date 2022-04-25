@@ -39,10 +39,10 @@ void byteToHex(uint8_t *src, char *dst, int length)
 
 // On invocation, sets the ownerKey_ to the public key of the
 // device that created the Transaction
-Transaction::Transaction(uint8_t key[KEY_LENGTH], const char stamp[STAMP_LENGTH])
+Transaction::Transaction(uint8_t key[KEY_LENGTH], const char timestamp[STAMP_LENGTH])
 {
     std::copy(key, key + KEY_LENGTH, ownerKey_);
-    std::copy(stamp, stamp + STAMP_LENGTH, stamp_);
+    std::copy(timestamp, timestamp + STAMP_LENGTH, stamp_);
 }
 
 uint8_t *Transaction::genHash(void)
@@ -58,16 +58,16 @@ uint8_t *Transaction::genHash(void)
     return t_hash;
 }
 
-// Returns the humidity of the DHT sensor
-uint8_t Transaction::getHumidity(void)
+char *Transaction::getDataHex(void)
 {
-    return data_.humidity;
-}
+    static char hexData[(sizeof(Data) * 2) + 1];
 
-// Returns the temperature of the DHT sensor
-uint8_t Transaction::getTemperature(void)
-{
-    return data_.temperature;
+    // Clearing garbage data
+    memset(hexData, '\0', (sizeof(Data) * 2) + 1);
+
+    byteToHex((uint8_t *)&data_, hexData, sizeof(Data));
+
+    return hexData;
 }
 
 // Returns the base address of the stamp
@@ -102,11 +102,11 @@ char *Transaction::getSignatureHex(void)
     return hexSign;
 }
 
-// Prints the timestamp of when the Transaction was created
-void Transaction::printStamp(void)
-{
-    Serial.println(stamp_);
-}
+// // Prints the timestamp of when the Transaction was created
+// void Transaction::printStamp(void)
+// {
+//     Serial.println(stamp_);
+// }
 
 // Prints the signature value of the Transaction. Used for debugging purposes
 void Transaction::printSignature(void)
