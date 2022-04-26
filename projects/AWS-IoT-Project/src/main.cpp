@@ -41,7 +41,7 @@ int i, n, sample;
 char payload[MAX_SIZE];
 WiFiClientSecure wiFiClient;
 void msgReceived(char* topic, byte* payload, unsigned int len);
-PubSubClient pubSubClient(awsEndpoint, 8883, msgReceived, wiFiClient); 
+PubSubClient pubSubClient(awsEndpoint, 8883, msgReceived, wiFiClient);
 unsigned long lastPublish;
 unsigned long l;
 // ===============================
@@ -235,7 +235,7 @@ void setup()
 {
     Serial.begin(BAUD_RATE);
     sample = 1;
-
+    
     Serial.println("\tSizes of specific structs/objects");
     Serial.println("================================================");
     Serial.printf("\tSize of 'Data' struct: %d (bytes)\n", sizeof(Data));
@@ -262,7 +262,6 @@ void loop()
     Transaction *t;
     SHA256 sha256;
     StaticJsonDocument<BUDGET> doc;
-    char *byteString;
     size_t size;
 
     // Resetting
@@ -302,6 +301,7 @@ void loop()
             {
                 pubSubClient.publish("outTopic", payload, size);
                 Serial.println("Data was published!");
+                Serial.printf("Size of doc: %d\n", size);
                 lastPublish = millis();
             }
 
