@@ -5,3 +5,4 @@
 .vscode/ipch
 include/aws_creds.h
 include/config.h
+logging/
