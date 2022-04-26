@@ -32,7 +32,7 @@ uint8_t chipId[sizeof(int)];
 // ===============================
 //            Iteration
 // ===============================
-int i, n;
+int i, n, sample;
 // ===============================
 
 //  ==============================
@@ -190,6 +190,7 @@ int sampleSensor(void)
     }
 
     Serial.println("Sample OK");
+    Serial.printf("Sample Num: %d\n", sample++);
     return DHT_SUCCESS;
 }
 
@@ -233,6 +234,7 @@ void wifiInit(void)
 void setup()
 {
     Serial.begin(BAUD_RATE);
+    sample = 1;
 
     Serial.println("\tSizes of specific structs/objects");
     Serial.println("================================================");
