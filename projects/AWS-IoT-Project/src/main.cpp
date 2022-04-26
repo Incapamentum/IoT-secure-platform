@@ -63,6 +63,14 @@ BearSSL::X509List rootCert(caPemCrt);
 // ===============================
 
 // ===============================
+//              Timer
+// ===============================
+long unsigned int timeStart;
+long unsigned int timeEnd;
+double timeElapsed;
+// ===============================
+
+// ===============================
 //           Timestamps
 // ===============================
 char ts[23];
@@ -149,9 +157,9 @@ void pubSubCheckConnect(void)
             Serial.print(".");
             val = pubSubClient.connect("ESPthing");
 
-            Serial.printf("Val: %d\n", val);
+            Serial.printf("\nVal: %d\n", val);
         }
-        Serial.println(" connected");
+        Serial.println("Connected");
         pubSubClient.subscribe("inTopic");
     }
     pubSubClient.loop();
@@ -255,12 +263,19 @@ void loop()
     char *byteString;
     size_t size;
 
+    // Resetting
+    timeStart = 0;
+    timeEnd = 0;
+
     // Check for any incoming messages
     pubSubCheckConnect();
 
     // Sensor success
     if (sampleSensor() == DHT_SUCCESS)
     {
+        // Start timing
+        timeStart = micros();
+
         getTime();
 
         // Clearing contents
@@ -288,11 +303,19 @@ void loop()
                 lastPublish = millis();
             }
 
+            timeEnd = micros();
         }
         else
         {
             Serial.println("Invalid transaction");
         }
+    }
+
+    // Only print timing information if it's not default
+    if ((timeStart != 0) && (timeEnd != 0))
+    {
+        timeElapsed = (double) timeEnd - timeStart;
+        Serial.printf("Elapsed time: %.04f seconds\n", (double) timeElapsed / SEC_IN_MICROS);
     }
 
     delay(POLL_RATE);

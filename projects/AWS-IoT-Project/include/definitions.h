@@ -14,9 +14,10 @@
 //  ===============================
 //         TIME MANAGEMENT
 // ===============================
-#define SEC 1000
+#define SEC_IN_MILLIS 1000
+#define SEC_IN_MICROS 1000000
 #define HALF_SEC 500
-#define POLL_RATE 600 * SEC
+#define POLL_RATE 30 * SEC_IN_MILLIS
 #define T_DELAY HALF_SEC * 6
 // ===============================
 
