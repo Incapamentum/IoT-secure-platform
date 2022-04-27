@@ -7,3 +7,4 @@ certs/
 data/
 include/config.h
 include/aws.h
+logging/
