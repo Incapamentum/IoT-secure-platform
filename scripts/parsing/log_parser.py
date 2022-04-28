@@ -4,6 +4,7 @@ import sys
 OUTPUT_PATH = "..\\output\\"
 
 if (len(sys.argv) != 3):
+    print("Insufficient args")
     sys.exit(-1)
 
 sample = 0
