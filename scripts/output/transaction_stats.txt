@@ -1,0 +1,5 @@
+Average latency: 0.9176
+Median latency: 0.8872
+Minimum latency: 0.8368
+Maximum latency: 2.0256
+Number of outliers: 33
