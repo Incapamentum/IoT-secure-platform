@@ -21,22 +21,13 @@ baseline_data = pickle.load(pickled_baseline)
 transaction_data = pickle.load(pickled_transaction)
 
 # Plotting figures
-fig, axes = plt.subplots(nrows=1, ncols=2)
-fig.suptitle("Data Collection & Publishing Latencies (1000 Samples)")
+plt.boxplot([baseline_data, transaction_data], sym='')
+plt.title("Data Collection & Publishing Latencies (1000 Samples)")
+plt.ylabel("Latency (seconds)")
+plt.yscale("log")
+plt.xticks(ticks=[1, 2], labels=["Baseline", "Transaction"])
 
-axes[0].set_yscale("log")
-axes[0].set_ylabel("Latency (seconds)")
-axes[0].boxplot(baseline_data)
-axes[0].title.set_text("Baseline")
-axes[0].xaxis.set_ticklabels([])
-
-axes[1].set_yscale("log")
-# axes[1].set_ylabel("Latency (seconds)")
-axes[1].boxplot(transaction_data)
-axes[1].title.set_text("Transactions")
-axes[1].xaxis.set_ticklabels([])
-
-fig.tight_layout()
+# fig.tight_layout()
 plt.savefig(OUTPUT_FILE)
 
 pickled_baseline.close()
